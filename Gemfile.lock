@@ -3,6 +3,7 @@ GEM
   specs:
     concurrent-ruby (1.0.5)
     mustermann (1.0.1)
+    puma (3.11.2)
     rack (2.0.3)
     rack-protection (2.0.0)
       rack
@@ -19,8 +20,9 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  puma
   sinatra
   sucker_punch (~> 2.0)
 
 BUNDLED WITH
-   1.16.0
+   1.16.1

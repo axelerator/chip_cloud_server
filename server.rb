@@ -2,6 +2,10 @@ require 'sucker_punch'
 require 'sinatra'
 require 'socket'                 # Get sockets from stdlib
 
+configure {
+	  set :server, :puma
+}
+
 class HomeHandler
   def initialize
     server = TCPServer.open(2000)    # Socket to listen on port 2000
@@ -28,13 +32,17 @@ end
 
 HHT = HomeHandler.new
 
+class Pumatra < Sinatra::Base
+	get '/' do
+	  'Hello world!'
+	end
 
-get '/' do
-  'Hello world!'
+	get '/foo' do
+	  HHT.send_command 'Toll'
+	  "foo#{HHT.class.name}"
+	end
+
+	    run! if app_file == $0
 end
 
-get '/foo' do
-  HHT.send_command 'Toll'
-  "foo#{HHT.class.name}"
-end
 
