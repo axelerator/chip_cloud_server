@@ -130,6 +130,7 @@ class Pumatra < Sinatra::Base
 	get '/:id/bye' do
     client = CLIENTS[params[:id]]
 	  client.send_command(Command.bye)
+    CLIENTS[params[:id]] = nil
     "BYE"
 	end
 
@@ -138,6 +139,13 @@ class Pumatra < Sinatra::Base
 	  client.send_command(Command.heartbeat)
     "heartbeat"
 	end
+
+	get '/:id/toggle' do
+    client = CLIENTS[params[:id]]
+	  client.send_command(Command.toggle)
+    "heartbeat"
+	end
+
 
   error do
     if env['sinatra.error'].is_a? APIError
