@@ -39,6 +39,10 @@ class HomeHandler
     end
   end
 
+  def close
+    @client&.close
+  end
+
   def send_command(cmd)
     @commands << [Time.now, cmd]
     @client.puts cmd if @client
@@ -130,6 +134,7 @@ class Pumatra < Sinatra::Base
 	get '/:id/bye' do
     client = CLIENTS[params[:id]]
 	  client.send_command(Command.bye)
+    client.close
     CLIENTS.delete(params[:id])
     "BYE"
 	end
