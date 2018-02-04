@@ -140,9 +140,15 @@ class Pumatra < Sinatra::Base
     "heartbeat"
 	end
 
-	get '/:id/toggle' do
+	get '/:id/on' do
     client = CLIENTS[params[:id]]
-	  client.send_command(Command.toggle)
+	  client.send_command(Command.turn_on)
+    "heartbeat"
+	end
+
+	get '/:id/off' do
+    client = CLIENTS[params[:id]]
+	  client.send_command(Command.turn_off)
     "heartbeat"
 	end
 

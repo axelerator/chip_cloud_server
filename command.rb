@@ -28,7 +28,8 @@ class Command
   class Identify < Command; end
   class Heartbeat < Command; end
   class Welcome < Command; end
-  class Toggle < Command; end
+  class TurnOn < Command; end
+  class TurnOff < Command; end
   class Bye < Command; end
 
   def init(args_as_string)
