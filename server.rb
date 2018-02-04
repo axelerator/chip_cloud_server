@@ -130,7 +130,7 @@ class Pumatra < Sinatra::Base
 	get '/:id/bye' do
     client = CLIENTS[params[:id]]
 	  client.send_command(Command.bye)
-    CLIENTS[params[:id]] = nil
+    CLIENTS.delete(params[:id])
     "BYE"
 	end
 
