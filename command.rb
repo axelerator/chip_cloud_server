@@ -1,6 +1,20 @@
 require 'active_support/all'
 
 class Command
+  def init(args_as_string)
+    # override to parse
+  end
+
+  def cmd_params
+    nil
+  end
+
+  def to_cmd
+    "#{self.class.name.demodulize.underscore.upcase}:#{cmd_params}"
+  end
+end
+
+class Request
 
   def self.inherited(subclass)
     self.define_singleton_method subclass.name.demodulize.underscore do |args = nil|
@@ -10,11 +24,83 @@ class Command
     end
   end
 
-  def client_action(client)
-    puts "NOOP#{self.class.name} "
+  def self.from_cmd(str)
+    begin
+      class_name, *rest = str.split(':')
+      cmd = Response.const_get(class_name.downcase.camelize).new
+      cmd.init(rest.join(':').strip)
+      cmd
+    rescue StandardError => e
+      puts "Unable to deserialize command #{str}"
+      raise e
+    end
   end
 
-  class AnswerToken < Command
+  class Identify < Request
+    def client_action(client)
+      client.socket.puts Command.answer_token('secret')
+    end
+  end
+
+  class Welcome < Request
+  end
+
+  class Bye < Request
+    def client_action(client)
+      client.done = true
+    end
+  end
+
+  class TurnOn < Request
+    def client_action(client)
+      if DRY_MODE
+        puts "turning pin on"
+      else
+        PINS[:XIO7].value = 1
+      end
+    end
+  end
+
+  class TurnOff < Request
+    def client_action(client)
+      if DRY_MODE
+        puts "turning pin off"
+      else
+        PINS[:XIO7].value = 0
+      end
+    end
+  end
+
+  class Heartbeat < Request
+    def respond_with
+      Response.heartbeat
+    end
+  end
+
+end
+
+class Response < Command
+  def self.inherited(subclass)
+    self.define_singleton_method subclass.name.demodulize.underscore do |args = nil|
+      c = subclass.new
+      c.init(args) if args
+      c.to_cmd
+    end
+  end
+
+  def self.from_cmd(str)
+    begin
+      class_name, *rest = str.split(':')
+      cmd = Response.const_get(class_name.downcase.camelize).new
+      cmd.init(rest.join(':').strip)
+      cmd
+    rescue StandardError => e
+      puts "Unable to deserialize command #{str}"
+      raise e
+    end
+  end
+
+  class AnswerToken < Response
     attr_reader :token
     def init(args)
       @token = args
@@ -29,72 +115,9 @@ class Command
     end
   end
 
-  class Identify < Command
-    def client_action(client)
-      client.socket.puts Command.answer_token('secret')
-    end
+  class Received
 
   end
-
-  class Heartbeat < Command
-    def client_action(client)
-      puts "Ansering heartbeat"
-    end
-  end
-
-  class Welcome < Command
-  end
-
-  class TurnOn < Command
-    def client_action(client)
-      if DRY_MODE
-        puts "turning pin on"
-      else
-        PINS[:XIO7].value = 1
-      end
-    end
-  end
-
-  class TurnOff < Command
-    def client_action(client)
-      if DRY_MODE
-        puts "turning pin off"
-      else
-        PINS[:XIO7].value = 0
-      end
-    end
-  end
-
-  class Bye < Command
-    def client_action(client)
-      client.done = true
-    end
-  end
-
-  def init(args_as_string)
-    # override to parse
-  end
-
-  def self.from_cmd(str)
-    begin
-      class_name, *rest = str.split(':')
-      cmd = Command.const_get(class_name.downcase.camelize).new
-      cmd.init(rest.join(':').strip)
-      cmd
-    rescue StandardError => e
-      puts "Unable to deserialize command #{str}"
-      raise e
-    end
-  end
-
-  def cmd_params
-    nil
-  end
-
-  def to_cmd
-    "#{self.class.name.demodulize.underscore.upcase}:#{cmd_params}"
-  end
-
 
 end
 

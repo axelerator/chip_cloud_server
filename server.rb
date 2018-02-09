@@ -21,13 +21,14 @@ class HomeHandler
     @id = id
     @commands = []
     server = TCPServer.open(port)    # Socket to listen on port 2000
+    @closed = false
     Thread.start() do |client|
-      loop {
+      while (!@closed) do
         puts "Server.accept"
         @client = server.accept
-        @client.puts(Command.identify)
+        @client.puts(Request.identify)
         line = @client.gets
-        response = Command.from_cmd(line)
+        response = Response.from_cmd(line)
         if response.valid_token?
           @client.puts Command.welcome
         else
@@ -35,11 +36,13 @@ class HomeHandler
           @client.close                  # Disconnect from the client
           @client = nil
         end
-      }
+      end
+      puts "stop listening"
     end
   end
 
   def close
+    @closed = true
     @client&.close
   end
 
@@ -117,11 +120,12 @@ class Pumatra < Sinatra::Base
 
 	get '/register' do
     begin
-      free_port = (CLIENTS.values.map(&:port).max || 1999) + 1
       id = params['id']
       raise APIError.new("not allowed") if id.nil? || id == '' || id.length > 512
       client = CLIENTS[id]
       unless client
+        free_port = (CLIENTS.values.map(&:port).max || 1999) + 1
+        puts "Registering new client '#{id}' on port #{free_port}"
         client = HomeHandler.new(id, free_port)
         CLIENTS[id] = client
       end
