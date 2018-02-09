@@ -10,6 +10,10 @@ class Command
     end
   end
 
+  def client_action(client)
+    puts "NOOP#{self.class.name} "
+  end
+
   class AnswerToken < Command
     attr_reader :token
     def init(args)
@@ -25,12 +29,47 @@ class Command
     end
   end
 
-  class Identify < Command; end
-  class Heartbeat < Command; end
-  class Welcome < Command; end
-  class TurnOn < Command; end
-  class TurnOff < Command; end
-  class Bye < Command; end
+  class Identify < Command
+    def client_action(client)
+      client.socket.puts Command.answer_token('secret')
+    end
+
+  end
+
+  class Heartbeat < Command
+    def client_action
+      puts "Ansering heartbeat"
+    end
+  end
+
+  class Welcome < Command
+  end
+
+  class TurnOn < Command
+    def client_action(client)
+      if DRY_MODE
+        puts "turning pin on"
+      else
+        PINS[:XIO7].value = 1
+      end
+    end
+  end
+
+  class TurnOff < Command
+    def client_action(client)
+      if DRY_MODE
+        puts "turning pin off"
+      else
+        PINS[:XIO7].value = 0
+      end
+    end
+  end
+
+  class Bye < Command
+    def client_action(client)
+      client.done = true
+    end
+  end
 
   def init(args_as_string)
     # override to parse

@@ -23,8 +23,8 @@ class HomeHandler
     server = TCPServer.open(port)    # Socket to listen on port 2000
     Thread.start() do |client|
       loop {
+        puts "Server.accept"
         @client = server.accept
-
         @client.puts(Command.identify)
         line = @client.gets
         response = Command.from_cmd(line)
@@ -120,11 +120,13 @@ class Pumatra < Sinatra::Base
       free_port = (CLIENTS.values.map(&:port).max || 1999) + 1
       id = params['id']
       raise APIError.new("not allowed") if id.nil? || id == '' || id.length > 512
-      raise APIError.new("already in use") if CLIENTS[id]
-      new_handler = HomeHandler.new(id, free_port)
-      CLIENTS[id] = new_handler
+      client = CLIENTS[id]
+      unless client
+        client = HomeHandler.new(id, free_port)
+        CLIENTS[id] = client
+      end
       {
-        port: new_handler.port
+        port: client.port
       }.to_json
     rescue APIError => e
       e.message
