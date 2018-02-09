@@ -34,9 +34,9 @@ class HomeHandler
           puts "DEBUG: #{line}"
           response = Response.from_cmd(line)
           if response.valid_token?
-            @client.puts Command.welcome
+            @client.puts Request.welcome
           else
-            @client.puts Command.bye
+            @client.puts Request.bye
             @client.close                  # Disconnect from the client
             @client = nil
           end

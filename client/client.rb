@@ -37,7 +37,6 @@ class Client
     @socket = TCPSocket.open(@hostname, @port)
     while !done && line = @socket.gets     # Read lines from the socket
       puts "received #{line}"
-
       cmd = Request.from_cmd(line)
       cmd.client_action(self)
       puts "Sending #{cmd.response}"

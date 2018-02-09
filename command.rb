@@ -27,7 +27,7 @@ class Request < Command
   def self.from_cmd(str)
     begin
       class_name, *rest = str.split(':')
-      cmd = Response.const_get(class_name.downcase.camelize).new
+      cmd = Request.const_get(class_name.downcase.camelize).new
       cmd.init(rest.join(':').strip)
       cmd
     rescue StandardError => e
