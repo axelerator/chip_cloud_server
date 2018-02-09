@@ -123,7 +123,7 @@ class Response < Command
     end
   end
 
-  class Received
+  class Received < Response
   end
 
 end
