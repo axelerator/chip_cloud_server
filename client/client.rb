@@ -38,6 +38,7 @@ class Client
     while !done && line = @socket.gets     # Read lines from the socket
       cmd = Command.from_cmd(line)
       cmd.client_action(self)
+      @socket.puts cmd.response
     end
     @socket.close                 # Close the socket when done
   end

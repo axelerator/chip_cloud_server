@@ -14,7 +14,7 @@ class Command
   end
 end
 
-class Request
+class Request < Command
 
   def self.inherited(subclass)
     self.define_singleton_method subclass.name.demodulize.underscore do |args = nil|
@@ -36,9 +36,17 @@ class Request
     end
   end
 
+  def client_action(client)
+    puts "NOOP"
+  end
+
+  def response
+    Response.received
+  end
+
   class Identify < Request
-    def client_action(client)
-      client.socket.puts Command.answer_token('secret')
+    def response
+      Response.answer_token('secret')
     end
   end
 
@@ -116,7 +124,6 @@ class Response < Command
   end
 
   class Received
-
   end
 
 end

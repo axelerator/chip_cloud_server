@@ -20,24 +20,32 @@ class HomeHandler
     @port = port
     @id = id
     @commands = []
+    puts "TCPServer open on port #{port}"
     server = TCPServer.open(port)    # Socket to listen on port 2000
     @closed = false
     Thread.start() do |client|
-      while (!@closed) do
-        puts "Server.accept"
-        @client = server.accept
-        @client.puts(Request.identify)
-        line = @client.gets
-        response = Response.from_cmd(line)
-        if response.valid_token?
-          @client.puts Command.welcome
-        else
-          @client.puts Command.bye
-          @client.close                  # Disconnect from the client
-          @client = nil
+      begin
+        while (!@closed) do
+          puts "Server.accept"
+          @client = server.accept
+          puts "Sending: #{Request.identify}"
+          @client.puts(Request.identify)
+          line = @client.gets
+          puts "DEBUG: #{line}"
+          response = Response.from_cmd(line)
+          if response.valid_token?
+            @client.puts Command.welcome
+          else
+            @client.puts Command.bye
+            @client.close                  # Disconnect from the client
+            @client = nil
+          end
         end
+        puts "stop listening"
+      rescue StandardError => e
+        puts e.message
+        puts e.backtrace.first
       end
-      puts "stop listening"
     end
   end
 
