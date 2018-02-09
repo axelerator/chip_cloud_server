@@ -20,9 +20,10 @@ class Client
   def initialize
     @done = false
     #@hostname = 'localhost'
-    #@web_port = ':9292'
-    @hostname = 'axelerator.de'
-    @web_port = ''
+    @hostname = '192.168.178.56'
+    @web_port = ':9292'
+    #@hostname = 'axelerator.de'
+    #@web_port = ''
   end
 
   def register
