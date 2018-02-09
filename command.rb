@@ -37,7 +37,7 @@ class Command
   end
 
   class Heartbeat < Command
-    def client_action
+    def client_action(client)
       puts "Ansering heartbeat"
     end
   end
