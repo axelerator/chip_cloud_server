@@ -80,7 +80,7 @@ class Request < Command
   end
 
   class Heartbeat < Request
-    def respond_with
+    def response
       Response.heartbeat
     end
   end
@@ -121,6 +121,9 @@ class Response < Command
     def cmd_params
       @token
     end
+  end
+
+  class Heartbeat < Response
   end
 
   class Received < Response
