@@ -127,6 +127,9 @@ class Response < Command
   end
 
   class Received < Response
+    def init(args)
+
+    end
   end
 
 end

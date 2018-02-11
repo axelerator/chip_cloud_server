@@ -2,6 +2,7 @@ require 'active_support/all'
 require 'sucker_punch'
 require 'sinatra'
 require 'socket'                 # Get sockets from stdlib
+require 'timeout'
 #require 'bcrypt'
 
 load 'command.rb'
@@ -14,6 +15,28 @@ set :show_exceptions, :after_handler
 enable :sessions
 set :sessions, true
 
+class HeartbeatJob
+  include SuckerPunch::Job
+
+  def perform(client_id, reschedule_in=nil)
+    begin
+      client = Pumatra::CLIENTS[client_id]
+      Timeout.timeout(5) do
+        heartbeat_result = client.send_command(Request.heartbeat)
+        puts "HEARTBEAT -> #{client_id}: #{heartbeat_result}"
+        if reschedule_in
+          self.class.perform_in(client_id, reschedule_in)
+        end
+        heartbeat_result
+      end
+    rescue Timeout::Error
+      client.close
+      puts "Removed #{client_id} because unresponsive"
+      Pumatra::CLIENTS.delete(client_id)
+      "Timeout"
+    end
+  end
+end
 class HomeHandler
   attr_reader :id, :port
   def initialize(id, port)
@@ -21,25 +44,26 @@ class HomeHandler
     @id = id
     @commands = []
     puts "TCPServer open on port #{port}"
-    server = TCPServer.open(port)    # Socket to listen on port 2000
+    @server = TCPServer.open(port)    # Socket to listen on port 2000
     @closed = false
     Thread.start() do |client|
       begin
-        while (!@closed) do
           puts "Server.accept"
-          @client = server.accept
+          @client = @server.accept
           puts "Sending: #{Request.identify}"
           @client.puts(Request.identify)
           line = @client.gets
           puts "DEBUG: #{line}"
           response = Response.from_cmd(line)
           if response.valid_token?
-            @client.puts Request.welcome
+            send_command(Request.welcome)
           else
             @client.puts Request.bye
             @client.close                  # Disconnect from the client
             @client = nil
           end
+        while (!@closed) do
+
         end
         puts "stop listening"
       rescue StandardError => e
@@ -52,11 +76,15 @@ class HomeHandler
   def close
     @closed = true
     @client&.close
+    @server&.close
   end
 
   def send_command(cmd)
     @commands << [Time.now, cmd]
     @client.puts cmd if @client
+    line = @client.gets
+    Response.from_cmd line
+    line
   end
 
   def api_state
@@ -147,21 +175,19 @@ class Pumatra < Sinatra::Base
 
 	get '/:id/bye' do
     client = CLIENTS[params[:id]]
-	  client.send_command(Command.bye)
+	  client.send_command(Request.bye)
     client.close
     CLIENTS.delete(params[:id])
     "BYE"
 	end
 
 	get '/:id/heartbeat' do
-    client = CLIENTS[params[:id]]
-	  client.send_command(Command.heartbeat)
-    "heartbeat"
+    HeartbeatJob.new.perform(params[:id], 8)
 	end
 
 	get '/:id/on' do
     client = CLIENTS[params[:id]]
-	  client.send_command(Command.turn_on)
+	  client.send_command(Request.turn_on)
     "heartbeat"
 	end
 
