@@ -174,7 +174,7 @@ class Pumatra < Sinatra::Base
 	end
 
 
-	get '/:id/:token/bye' do
+	post '/:id/:token/bye' do
     return halt(403, 'Go away') unless params[:token] == CREDS[params[:id].to_sym]
     client = CLIENTS[params[:id]]
 	  client.send_command(Request.bye)
@@ -183,19 +183,19 @@ class Pumatra < Sinatra::Base
     "BYE"
 	end
 
-	get '/:id/:token/heartbeat' do
+	post '/:id/:token/heartbeat' do
     return halt(403, 'Go away') unless params[:token] == CREDS[params[:id].to_sym]
     HeartbeatJob.new.perform(params[:id], 30)
 	end
 
-	get '/:id/:token/on' do
+	post '/:id/:token/on' do
     return halt(403, 'Go away') unless params[:token] == CREDS[params[:id].to_sym]
     client = CLIENTS[params[:id]]
 	  client.send_command(Request.turn_on)
     "heartbeat"
 	end
 
-	get '/:id/:token/off' do
+	post '/:id/:token/off' do
     return halt(403, 'Go away') unless params[:token] == CREDS[params[:id].to_sym]
     client = CLIENTS[params[:id]]
 	  client.send_command(Request.turn_off)
