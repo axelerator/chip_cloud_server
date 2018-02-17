@@ -25,7 +25,7 @@ class HeartbeatJob
         heartbeat_result = client.send_command(Request.heartbeat)
         puts "HEARTBEAT -> #{client_id}: #{heartbeat_result}"
         if reschedule_in
-          self.class.perform_in(client_id, reschedule_in)
+          self.class.perform_in(reschedule_in, client_id, reschedule_in)
         end
         heartbeat_result
       end
@@ -80,7 +80,7 @@ class HomeHandler
   end
 
   def send_command(cmd)
-    @commands << [Time.now, cmd]
+    @commands << [Time.now, cmd] unless cmd.is_a? Request::Heartbeat
     @client.puts cmd if @client
     line = @client.gets
     Response.from_cmd line
@@ -173,7 +173,9 @@ class Pumatra < Sinatra::Base
     end
 	end
 
-	get '/:id/bye' do
+
+	get '/:id/:token/bye' do
+    return halt(403, 'Go away') unless params[:token] == CREDS[params[:id].to_sym]
     client = CLIENTS[params[:id]]
 	  client.send_command(Request.bye)
     client.close
@@ -181,22 +183,24 @@ class Pumatra < Sinatra::Base
     "BYE"
 	end
 
-	get '/:id/heartbeat' do
-    HeartbeatJob.new.perform(params[:id], 8)
+	get '/:id/:token/heartbeat' do
+    return halt(403, 'Go away') unless params[:token] == CREDS[params[:id].to_sym]
+    HeartbeatJob.new.perform(params[:id], 30)
 	end
 
-	get '/:id/on' do
+	get '/:id/:token/on' do
+    return halt(403, 'Go away') unless params[:token] == CREDS[params[:id].to_sym]
     client = CLIENTS[params[:id]]
 	  client.send_command(Request.turn_on)
     "heartbeat"
 	end
 
-	get '/:id/off' do
+	get '/:id/:token/off' do
+    return halt(403, 'Go away') unless params[:token] == CREDS[params[:id].to_sym]
     client = CLIENTS[params[:id]]
-	  client.send_command(Command.turn_off)
+	  client.send_command(Request.turn_off)
     "heartbeat"
 	end
-
 
   error do
     if env['sinatra.error'].is_a? APIError
