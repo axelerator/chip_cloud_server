@@ -150,7 +150,7 @@ class HomeHandler
   end
 
   def send_command(cmd)
-    @commands << [Time.now, cmd] unless cmd.is_a? Request::Heartbeat
+    @commands << [Time.now, cmd] unless cmd.start_with? 'HEARTBEAT'
     #@client.puts cmd if @client
     #line = @client.gets
     #Response.from_cmd line
