@@ -1,9 +1,10 @@
 require 'socket'        # Sockets are in standard library
 require 'net/http'
 require 'json'
+require 'yaml'
 
 load 'command.rb'
-
+CONFIG = YAML.load_file('config.yml')
 DRY_MODE = false
 begin
   require 'chip-gpio'
@@ -19,15 +20,14 @@ class Client
   attr_accessor :socket, :done
   def initialize
     @done = false
-    #@hostname = 'localhost'
-    @hostname = '192.168.178.56'
-    @web_port = ':9292'
-    #@hostname = 'axelerator.de'
-    #@web_port = ''
+    @hostname = CONFIG['server']['host']
+    @web_port = CONFIG['server']['port']
+    @web_port = @web_port.present? ? ":#{@web_port}" : ''
+    @protocol = CONFIG['server']['protocol']
   end
 
   def register
-    uri =  URI("http://#{@hostname}#{@web_port}/register?id=chip")
+    uri =  URI("#{@protocol}://#{@hostname}#{@web_port}/register?id=chip")
     response = Net::HTTP.get(uri)
     @port = JSON.parse(response)['port'].to_i
     self

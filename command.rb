@@ -31,7 +31,7 @@ class Request < Command
       cmd.init(rest.join(':').strip)
       cmd
     rescue StandardError => e
-      puts "Unable to deserialize command #{str}"
+      puts "Unable to deserialize command '#{str}'"
       raise e
     end
   end
@@ -103,7 +103,7 @@ class Response < Command
       cmd.init(rest.join(':').strip)
       cmd
     rescue StandardError => e
-      puts "Unable to deserialize command #{str}"
+      puts "Unable to deserialize command '#{str}'"
       raise e
     end
   end
